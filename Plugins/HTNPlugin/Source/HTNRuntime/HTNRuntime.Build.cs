@@ -6,9 +6,18 @@ public class HTNRuntime : ModuleRules
 {
 	public HTNRuntime(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PrivateIncludePaths.Add("HTNRuntime/Private");
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay" });
+        PublicDependencyModuleNames.AddRange(
+			new string[] {
+				"Core",
+				"CoreUObject",
+                "AIModule",
+            });
+
+		PrivateIncludePaths.AddRange(
+			new string[] {
+                "HTNRuntime/Private",
+			});
 	}
 }

@@ -6,21 +6,47 @@ public class HTNEditor : ModuleRules
 {
 	public HTNEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PrivateIncludePaths.Add("HTNEditor/Private");
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] {
-			"Core",
-			"CoreUObject",
-			"Engine",
-			"InputCore",
-			"UnrealEd", // for FAssetEditorManager
-			"KismetWidgets",
-			"Kismet",  // for FWorkflowCentricApplication
-			"PropertyEditor",
-			"RenderCore",
-			"HTN",
-			"ContentBrowser"
-		});
+		DynamicallyLoadedModuleNames.AddRange(
+			new string[] {
+				"AssetTools",
+				"MainFrame",
+//				"WorkspaceMenuStructure",
+			});
+
+		PrivateIncludePaths.AddRange(
+			new string[] {
+				"HTNEditor/Private",
+                "HTNEditor/Private/AssetTools",
+                "HTNEditor/Private/Factories",
+                "HTNEditor/Private/Shared",
+                "HTNEditor/Private/Styles",
+                "HTNEditor/Private/Toolkits",
+                "HTNEditor/Private/Widgets",
+			});
+
+		PrivateDependencyModuleNames.AddRange(
+			new string[] {
+				"ContentBrowser",
+				"Core",
+				"CoreUObject",
+				"DesktopWidgets",
+				"EditorStyle",
+				"Engine",
+				"InputCore",
+				"Projects",
+				"Slate",
+				"SlateCore",
+				"HTNRuntime",
+				"UnrealEd",
+			});
+
+		PrivateIncludePathModuleNames.AddRange(
+			new string[] {
+				"AssetTools",
+				"UnrealEd",
+//				"WorkspaceMenuStructure",
+			});
 	}
 }
