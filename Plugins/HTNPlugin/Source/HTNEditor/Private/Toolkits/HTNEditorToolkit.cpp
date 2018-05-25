@@ -9,6 +9,7 @@
 #include "HTNAsset.h"
 #include "UObject/NameTypes.h"
 #include "Widgets/Docking/SDockTab.h"
+#include "SSingleObjectDetailsPanel.h"
 
 #define LOCTEXT_NAMESPACE "FHTNEditorToolkit"
 
@@ -22,7 +23,54 @@ namespace HTNAssetEditorNames
 {
 	static const FName AppIdentifier("HTNEditorApp");
 	static const FName TabId("HTNEditor");
+	static const FName DetailsTabId("HTNEditorDetails");
 }
+
+
+/* Nested classes
+*****************************************************************************/
+
+/////////////////////////////////////////////////////
+// SHTNPropertiesTabBody
+
+class SHTNPropertiesTabBody : public SSingleObjectDetailsPanel
+{
+public:
+	SLATE_BEGIN_ARGS(SHTNPropertiesTabBody) {}
+	SLATE_END_ARGS()
+
+private:
+	// Pointer back to owning sprite editor instance (the keeper of state)
+	TWeakPtr<class FHTNEditorToolkit> HTNEditorPtr;
+public:
+	void Construct(const FArguments& InArgs, TSharedPtr<FHTNEditorToolkit> InHTNEditor, TSharedPtr<ISlateStyle> InStyle)
+	{
+		HTNEditorPtr = InHTNEditor;
+		
+		SSingleObjectDetailsPanel::Construct(SSingleObjectDetailsPanel::FArguments().HostCommandList(InHTNEditor->GetToolkitCommands()).HostTabManager(InHTNEditor->GetTabManager()), /*bAutomaticallyObserveViaGetObjectToObserve=*/ true, /*bAllowSearch=*/ true);
+
+		//		TAttribute<ESpriteEditorMode::Type> SpriteEditorMode = TAttribute<ESpriteEditorMode::Type>::Create( TAttribute<ESpriteEditorMode::Type>::FGetter::CreateSP(InSpriteEditor.ToSharedRef(), &FSpriteEditor::GetCurrentMode));
+		//		FOnGetDetailCustomizationInstance CustomizeSpritesForEditor = FOnGetDetailCustomizationInstance::CreateStatic(&FSpriteDetailsCustomization::MakeInstanceForSpriteEditor, SpriteEditorMode);
+		//		PropertyView->RegisterInstancedCustomPropertyLayout(UPaperSprite::StaticClass(), CustomizeSpritesForEditor);
+	}
+
+	// SSingleObjectDetailsPanel interface
+	virtual UObject* GetObjectToObserve() const override
+	{
+		return HTNEditorPtr.Pin()->GetObjectForDetailsPanel();
+	}
+
+	virtual TSharedRef<SWidget> PopulateSlot(TSharedRef<SWidget> PropertyEditorWidget) override
+	{
+		return SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.FillHeight(1)
+			[
+				PropertyEditorWidget
+			];
+	}
+	// End of SSingleObjectDetailsPanel interface
+};
 
 
 /* FHTNEditorToolkit structors
@@ -75,10 +123,23 @@ void FHTNEditorToolkit::Initialize(UHTNAsset* InHTNAsset, const EToolkitMode::Ty
 						)
 						->Split
 						(
-							FTabManager::NewStack()
-								->AddTab(HTNAssetEditorNames::TabId, ETabState::OpenedTab)
-								->SetHideTabWell(true)
+							FTabManager::NewSplitter()
+								->SetOrientation(Orient_Horizontal)
 								->SetSizeCoefficient(0.9f)
+								->Split
+								(
+									FTabManager::NewStack()
+										->AddTab(HTNAssetEditorNames::TabId, ETabState::OpenedTab)
+										->SetHideTabWell(true)
+										->SetSizeCoefficient(0.9f)
+								)
+								->Split
+								(
+									FTabManager::NewStack()
+										->AddTab(HTNAssetEditorNames::DetailsTabId, ETabState::OpenedTab)
+										->SetHideTabWell(true)
+										->SetSizeCoefficient(0.1f)
+								)
 						)
 				)
 		);
@@ -118,6 +179,11 @@ void FHTNEditorToolkit::RegisterTabSpawners(const TSharedRef<FTabManager>& InTab
 		.SetDisplayName(LOCTEXT("HTNEditorTabName", "HTN Editor"))
 		.SetGroup(WorkspaceMenuCategoryRef)
 		.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Tabs.Viewports"));
+
+	InTabManager->RegisterTabSpawner(HTNAssetEditorNames::DetailsTabId, FOnSpawnTab::CreateSP(this, &FHTNEditorToolkit::HandleTabManagerSpawnTab, HTNAssetEditorNames::DetailsTabId))
+		.SetDisplayName(LOCTEXT("DetailsTabLabel", "Details"))
+		.SetGroup(WorkspaceMenuCategoryRef)
+		.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Tabs.Details"));
 }
 
 
@@ -189,6 +255,11 @@ TSharedRef<SDockTab> FHTNEditorToolkit::HandleTabManagerSpawnTab(const FSpawnTab
 	{
 		TabWidget = SNew(SHTNEditor, HTNAsset, Style);
 	}
+	else if (TabIdentifier == HTNAssetEditorNames::DetailsTabId)
+	{
+		TSharedPtr<FHTNEditorToolkit> HTNEditorPtr = SharedThis(this);
+		TabWidget = SNew(SHTNPropertiesTabBody, HTNEditorPtr, Style);
+	}
 
 	return SNew(SDockTab)
 		.TabRole(ETabRole::PanelTab)
@@ -197,5 +268,13 @@ TSharedRef<SDockTab> FHTNEditorToolkit::HandleTabManagerSpawnTab(const FSpawnTab
 		];
 }
 
+
+/* 
+*****************************************************************************/
+
+UObject* FHTNEditorToolkit::GetObjectForDetailsPanel() const
+{
+	return HTNAsset;
+}
 
 #undef LOCTEXT_NAMESPACE

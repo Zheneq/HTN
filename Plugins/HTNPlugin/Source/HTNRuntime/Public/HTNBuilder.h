@@ -2,20 +2,22 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "HTNOperator.h"
+//#include "CoreMinimal.h"
+//#include "UObject/ObjectMacros.h"
+//#include "HTNOperator.h"
 #include "HTNEffect.h"
-#include "BehaviorTree/Blackboard/BlackboardKeyType.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 
 #include "HTNBuilder.generated.h"
 
+
 USTRUCT(BlueprintType)
-struct FHTNBuilder_PrimitiveTask
+struct HTNRUNTIME_API FHTNBuilder_PrimitiveTask
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
-		UHTNOperator* Operator;
+		class UHTNOperator* Operator;
 
 	UPROPERTY(EditAnywhere, EditFixedSize)
 		TArray<FBlackboardKeySelector> BlackboardKeys;
@@ -23,7 +25,12 @@ struct FHTNBuilder_PrimitiveTask
 	UPROPERTY(EditAnywhere)
 		TArray<FHTNEffect> Effects;
 
+	FHTNBuilder_PrimitiveTask() : Operator(nullptr) {}
+
+};
+
 	// TODO: Update keys array on operator change!
+/*	
 	void SetOperator(UHTNOperator* NewOperator)
 	{
 		Operator = NewOperator;
@@ -34,9 +41,9 @@ struct FHTNBuilder_PrimitiveTask
 			Operator->GetBlackboardParameters(BlackboardKeys);
 		}
 	}
-};
+	*/
 /*
-struct HTNPLUGIN_API FHTNBuilder_Method
+struct HTNEDITOR_API FHTNBuilder_Method
 {
 	TArray<FHTNCondition> Conditions;
 	TArray<FName> Tasks;
@@ -56,7 +63,7 @@ struct HTNPLUGIN_API FHTNBuilder_Method
 	void AddTask(const FName& TaskName) { Tasks.Add(TaskName); }
 };
 
-struct HTNPLUGIN_API FHTNBuilder_CompositeTask
+struct HTNEDITOR_API FHTNBuilder_CompositeTask
 {
 	TArray<FHTNBuilder_Method> Methods;
 
@@ -76,7 +83,7 @@ struct HTNPLUGIN_API FHTNBuilder_CompositeTask
 	}
 };
 
-struct HTNPLUGIN_API FHTNBuilder_Domain
+struct HTNEDITOR_API FHTNBuilder_Domain
 {
 	TSharedPtr<FHTNDomain> DomainInstance;
 	

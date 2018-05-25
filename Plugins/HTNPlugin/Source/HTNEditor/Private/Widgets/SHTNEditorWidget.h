@@ -5,11 +5,13 @@
 #include "Templates/SharedPointer.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/SCompoundWidget.h"
-#include "Widgets/Input/SMultiLineEditableTextBox.h"
 
 class FText;
 class ISlateStyle;
-class UTextAsset;
+class UHTNAsset;
+
+class SButton;
+class SMultiLineEditableTextBox;
 
 
 /**
@@ -48,10 +50,15 @@ private:
 	/** Callback for property changes in the text asset. */
 	void HandleHTNAssetPropertyChanged(UObject* Object, FPropertyChangedEvent& PropertyChangedEvent);
 
+
+	FReply CreateNewPrimitiveTask();
+
 private:
 
 	/** Holds the editable text box widget. */
 	TSharedPtr<SMultiLineEditableTextBox> EditableTextBox;
+
+	TSharedPtr<SButton> BtnNewPrimitiveTask;
 
 	/** Pointer to the text asset that is being edited. */
 	UHTNAsset* HTNAsset;

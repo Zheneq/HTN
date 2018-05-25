@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "BehaviorTree/Blackboard/BlackboardKeyType.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 #include "HTNOperator.generated.h"
 
 /**

@@ -8,6 +8,8 @@
 #include "UObject/Class.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Input/SMultiLineEditableTextBox.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Text/STextBlock.h"
 
 #include "HTNEditorSettings.h"
 
@@ -46,6 +48,17 @@ void SHTNEditor::Construct(const FArguments& InArgs, UHTNAsset* InHTNAsset, cons
 					.OnTextCommitted(this, &SHTNEditor::HandleEditableTextBoxTextCommitted)
 					.Text(HTNAsset->Text)
 			]
+		+ SVerticalBox::Slot()
+			.FillHeight(1.0f)
+			[
+				SAssignNew(BtnNewPrimitiveTask, SButton)
+				.OnClicked(this, &SHTNEditor::CreateNewPrimitiveTask)
+				[
+					SNew(STextBlock)
+						.Font((Settings != nullptr) ? Settings->Font : FSlateFontInfo())
+						.Text(LOCTEXT("NewPrimTaskBtnCaption", "New Primitive Task"))
+				]
+			]
 	];
 
 	FCoreUObjectDelegates::OnObjectPropertyChanged.AddSP(this, &SHTNEditor::HandleHTNAssetPropertyChanged);
@@ -73,6 +86,13 @@ void SHTNEditor::HandleHTNAssetPropertyChanged(UObject* Object, FPropertyChanged
 	{
 		EditableTextBox->SetText(HTNAsset->Text);
 	}
+}
+
+
+FReply SHTNEditor::CreateNewPrimitiveTask()
+{
+	HTNAsset->PrimitiveTasks.AddDefaulted();
+	return FReply::Handled();
 }
 
 

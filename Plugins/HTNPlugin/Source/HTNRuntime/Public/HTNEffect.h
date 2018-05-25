@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "BehaviorTree/Blackboard/BlackboardKeyType.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyAllTypes.h"
 #include "BehaviorTree/BlackboardComponent.h"
 

@@ -40,7 +40,8 @@ public class HTNEditor : ModuleRules
 				"SlateCore",
 				"HTNRuntime",
 				"UnrealEd",
-			});
+                "KismetWidgets",
+            });
 
 		PrivateIncludePathModuleNames.AddRange(
 			new string[] {

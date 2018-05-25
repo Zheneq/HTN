@@ -11,7 +11,7 @@ class FSpawnTabArgs;
 class ISlateStyle;
 class IToolkitHost;
 class SDockTab;
-class UTextAsset;
+class UHTNAsset;
 
 
 /**
@@ -79,6 +79,10 @@ private:
 
 	/** Callback for spawning the Properties tab. */
 	TSharedRef<SDockTab> HandleTabManagerSpawnTab(const FSpawnTabArgs& Args, FName TabIdentifier);
+
+public:
+	// Returns object to be observed in the editor's details panel
+	UObject* GetObjectForDetailsPanel() const;
 
 private:
 
