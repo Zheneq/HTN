@@ -6,12 +6,14 @@
 #include "ISettingsSection.h"
 #include "Modules/ModuleInterface.h"
 #include "Modules/ModuleManager.h"
+#include "PropertyEditorModule.h"
 #include "Templates/SharedPointer.h"
 #include "Toolkits/AssetEditorToolkit.h"
 
 #include "AssetTools/HTNAssetActions.h"
 #include "Styles/HTNEditorStyle.h"
 #include "HTNEditorSettings.h"
+#include "Customizations/HTNBlackboardSelectorDetails.h"
 
 
 DEFINE_LOG_CATEGORY(LogHTNEditor);
@@ -60,6 +62,7 @@ public:
 		RegisterAssetTools();
 		RegisterMenuExtensions();
 		RegisterSettings();
+		RegisterCustomizations();
 
 		UE_LOG(LogHTNEditor, Log, TEXT("HTN editor plugin is up and running!"));
 	}
@@ -69,6 +72,7 @@ public:
 		UnregisterAssetTools();
 		UnregisterMenuExtensions();
 		UnregisterSettings();
+		UnregisterCustomizations();
 	}
 
 	virtual bool SupportsDynamicReloading() override
@@ -112,6 +116,27 @@ protected:
 			);
 		}
 	}
+
+	void RegisterCustomizations()
+	{
+		FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+
+		PropertyModule.RegisterCustomPropertyTypeLayout("HTNBlackboardKeySelector", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FHTNBlackboardKeySelectorCustomization::MakeInstance));
+
+		PropertyModule.NotifyCustomizationModuleChanged();
+	}
+
+	void UnregisterCustomizations()
+	{
+		if (FModuleManager::Get().IsModuleLoaded("PropertyEditor"))
+		{
+			FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+			PropertyModule.UnregisterCustomPropertyTypeLayout("HTNBlackboardKeySelector");
+
+			PropertyModule.NotifyCustomizationModuleChanged();
+		}
+	}
+
 
 	/** Unregisters asset tool actions. */
 	void UnregisterAssetTools()

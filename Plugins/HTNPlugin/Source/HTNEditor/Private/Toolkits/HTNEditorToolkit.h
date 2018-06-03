@@ -39,7 +39,7 @@ public:
 	/**
 	 * Initializes the editor tool kit.
 	 *
-	 * @param InTextAsset The UTextAsset asset to edit.
+	 * @param InHTNAsset The UHTNAsset asset to edit.
 	 * @param InMode The mode to create the toolkit in.
 	 * @param InToolkitHost The toolkit host.
 	 */
@@ -84,6 +84,13 @@ public:
 	// Returns object to be observed in the editor's details panel
 	UObject* GetObjectForDetailsPanel() const;
 
+	TWeakObjectPtr<UHTNAsset> GetAsset() { return HTNAsset; }
+
+	// Returns the Composite task which is currently selected (nullptr if none selected)
+	FHTNBuilder_CompositeTask* GetSelectedCompositeTask() const;
+
+	void SelectCompositeTask(FName Name);
+
 private:
 
 	/** The text asset being edited. */
@@ -91,4 +98,7 @@ private:
 
 	/** Pointer to the style set to use for toolkits. */
 	TSharedRef<ISlateStyle> Style;
+
+	/** Selected task (can be primitive or Composite) */
+	FName SelectedTask;
 };

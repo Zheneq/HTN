@@ -5,7 +5,9 @@
 #include "Editor.h"
 #include "EditorReimportHandler.h"
 #include "EditorStyleSet.h"
-#include "SHTNEditorWidget.h"
+#include "HTNEditorWidget.h"
+#include "HTNCompositeTaskWidget.h"
+#include "HTNDomainWidget.h"
 #include "HTNAsset.h"
 #include "UObject/NameTypes.h"
 #include "Widgets/Docking/SDockTab.h"
@@ -24,6 +26,7 @@ namespace HTNAssetEditorNames
 	static const FName AppIdentifier("HTNEditorApp");
 	static const FName TabId("HTNEditor");
 	static const FName DetailsTabId("HTNEditorDetails");
+	static const FName DomainTabId("HTNEditorDomain");
 }
 
 
@@ -129,6 +132,13 @@ void FHTNEditorToolkit::Initialize(UHTNAsset* InHTNAsset, const EToolkitMode::Ty
 								->Split
 								(
 									FTabManager::NewStack()
+										->AddTab(HTNAssetEditorNames::DomainTabId, ETabState::OpenedTab)
+										->SetHideTabWell(true)
+										->SetSizeCoefficient(0.9f)
+								)
+								->Split
+								(
+									FTabManager::NewStack()
 										->AddTab(HTNAssetEditorNames::TabId, ETabState::OpenedTab)
 										->SetHideTabWell(true)
 										->SetSizeCoefficient(0.9f)
@@ -182,6 +192,11 @@ void FHTNEditorToolkit::RegisterTabSpawners(const TSharedRef<FTabManager>& InTab
 
 	InTabManager->RegisterTabSpawner(HTNAssetEditorNames::DetailsTabId, FOnSpawnTab::CreateSP(this, &FHTNEditorToolkit::HandleTabManagerSpawnTab, HTNAssetEditorNames::DetailsTabId))
 		.SetDisplayName(LOCTEXT("DetailsTabLabel", "Details"))
+		.SetGroup(WorkspaceMenuCategoryRef)
+		.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Tabs.Details"));
+
+	InTabManager->RegisterTabSpawner(HTNAssetEditorNames::DomainTabId, FOnSpawnTab::CreateSP(this, &FHTNEditorToolkit::HandleTabManagerSpawnTab, HTNAssetEditorNames::DomainTabId))
+		.SetDisplayName(LOCTEXT("DomainTabLabel", "Domain"))
 		.SetGroup(WorkspaceMenuCategoryRef)
 		.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Tabs.Details"));
 }
@@ -253,7 +268,12 @@ TSharedRef<SDockTab> FHTNEditorToolkit::HandleTabManagerSpawnTab(const FSpawnTab
 
 	if (TabIdentifier == HTNAssetEditorNames::TabId)
 	{
-		TabWidget = SNew(SHTNEditor, HTNAsset, Style);
+		//TabWidget = SNew(SHTNEditor, HTNAsset, Style);
+		TabWidget = SNew(SHTNCompositeTask, this, Style);
+	}
+	else if(TabIdentifier == HTNAssetEditorNames::DomainTabId)
+	{
+		TabWidget = SNew(SHTNDomain, HTNAsset, Style);
 	}
 	else if (TabIdentifier == HTNAssetEditorNames::DetailsTabId)
 	{
@@ -276,5 +296,15 @@ UObject* FHTNEditorToolkit::GetObjectForDetailsPanel() const
 {
 	return HTNAsset;
 }
+
+FHTNBuilder_CompositeTask* FHTNEditorToolkit::GetSelectedCompositeTask() const
+{
+	if (HTNAsset && HTNAsset->CompositeTasks.Contains(SelectedTask))
+	{
+		return &HTNAsset->CompositeTasks[SelectedTask];
+	}
+	return nullptr;
+}
+
 
 #undef LOCTEXT_NAMESPACE

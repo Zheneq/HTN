@@ -1,6 +1,6 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
-#include "SHTNEditorWidget.h"
+#include "HTNEditorWidget.h"
 
 #include "Fonts/SlateFontInfo.h"
 #include "Internationalization/Text.h"
@@ -51,12 +51,11 @@ void SHTNEditor::Construct(const FArguments& InArgs, UHTNAsset* InHTNAsset, cons
 		+ SVerticalBox::Slot()
 			.FillHeight(1.0f)
 			[
-				SAssignNew(BtnNewPrimitiveTask, SButton)
-				.OnClicked(this, &SHTNEditor::CreateNewPrimitiveTask)
+				SNew(SButton)
 				[
 					SNew(STextBlock)
 						.Font((Settings != nullptr) ? Settings->Font : FSlateFontInfo())
-						.Text(LOCTEXT("NewPrimTaskBtnCaption", "New Primitive Task"))
+						.Text(LOCTEXT("NewPrimTaskBtnCaption", "New Primitive Task (disabled)"))
 				]
 			]
 	];
@@ -87,13 +86,5 @@ void SHTNEditor::HandleHTNAssetPropertyChanged(UObject* Object, FPropertyChanged
 		EditableTextBox->SetText(HTNAsset->Text);
 	}
 }
-
-
-FReply SHTNEditor::CreateNewPrimitiveTask()
-{
-	HTNAsset->PrimitiveTasks.AddDefaulted();
-	return FReply::Handled();
-}
-
 
 #undef LOCTEXT_NAMESPACE

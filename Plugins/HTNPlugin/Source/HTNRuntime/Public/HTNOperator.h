@@ -10,13 +10,13 @@
 /**
  * 
  */
-UCLASS(Blueprintable)
+UCLASS(BlueprintType, Blueprintable, Abstract)
 class HTNRUNTIME_API UHTNOperator : public UObject
 {
 	GENERATED_BODY()
 	
 public:
-	void GetBlackboardParameters(TArray<FBlackboardKeySelector>& outBlackboardKeys);
+	// void GetBlackboardParameters(TArray<FBlackboardKeySelector>& outBlackboardKeys);
 	
 	
 };

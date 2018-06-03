@@ -14,7 +14,7 @@ struct FHTNCondition
 
 	/** blackboard key selector */
 	UPROPERTY(EditAnywhere, Category = Blackboard)
-	FBlackboardKeySelector BlackboardKey;
+		FBlackboardKeySelector BlackboardKey;
 
 	/** operation type */
 	UPROPERTY()
@@ -79,5 +79,15 @@ struct FHTNCondition
 
 		return bResult;
 	}
+
+#if WITH_EDITOR
+
+	FString BuildDescription() const
+	{
+		// TODO
+		return TEXT("Condition");
+	}
+
+#endif // WITH_EDITOR
 };
 

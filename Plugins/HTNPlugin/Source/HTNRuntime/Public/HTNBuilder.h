@@ -4,86 +4,67 @@
 
 //#include "CoreMinimal.h"
 //#include "UObject/ObjectMacros.h"
-//#include "HTNOperator.h"
+#include "HTNCondition.h"
+#include "HTNOperator.h"
 #include "HTNEffect.h"
 #include "BehaviorTree/BehaviorTreeTypes.h"
 
 #include "HTNBuilder.generated.h"
 
-
-USTRUCT(BlueprintType)
+USTRUCT()
 struct HTNRUNTIME_API FHTNBuilder_PrimitiveTask
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
-		class UHTNOperator* Operator;
+		FName Name;
 
+	UPROPERTY(EditAnywhere)
+		FText DisplayName;
+
+	UPROPERTY(EditAnywhere)
+		TArray<FHTNCondition> Conditions;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<UHTNOperator> Operator;
+
+	// TODO: Detail customization for this
 	UPROPERTY(EditAnywhere, EditFixedSize)
 		TArray<FBlackboardKeySelector> BlackboardKeys;
 
 	UPROPERTY(EditAnywhere)
 		TArray<FHTNEffect> Effects;
-
-	FHTNBuilder_PrimitiveTask() : Operator(nullptr) {}
-
 };
 
-	// TODO: Update keys array on operator change!
-/*	
-	void SetOperator(UHTNOperator* NewOperator)
-	{
-		Operator = NewOperator;
-		BlackboardKeys.Empty();
+USTRUCT()
+struct HTNRUNTIME_API FHTNBuilder_Method
+{
+	GENERATED_BODY()
 
-		if (Operator)
-		{
-			Operator->GetBlackboardParameters(BlackboardKeys);
-		}
-	}
-	*/
+	UPROPERTY(EditAnywhere)
+		TArray<FHTNCondition> Conditions;
+
+	UPROPERTY(EditAnywhere)
+		TArray<FName> Tasks;
+};
+
+USTRUCT()
+struct HTNRUNTIME_API FHTNBuilder_CompositeTask
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+		FName Name;
+
+	UPROPERTY(EditAnywhere)
+		FText DisplayName;
+
+	UPROPERTY(EditAnywhere)
+		TArray<FHTNBuilder_Method> Methods;
+};
+
 /*
-struct HTNEDITOR_API FHTNBuilder_Method
-{
-	TArray<FHTNCondition> Conditions;
-	TArray<FName> Tasks;
-
-	FHTNBuilder_Method()
-	{}
-	explicit FHTNBuilder_Method(const FHTNCondition& InCondition)
-	{
-		if (ensure(InCondition.IsValid()))
-		{
-			Conditions.Add(InCondition);
-		}
-	}
-	FHTNBuilder_Method(const TArray<FHTNCondition>& InConditions)
-		: Conditions(InConditions)
-	{}
-	void AddTask(const FName& TaskName) { Tasks.Add(TaskName); }
-};
-
-struct HTNEDITOR_API FHTNBuilder_CompositeTask
-{
-	TArray<FHTNBuilder_Method> Methods;
-
-	FHTNBuilder_Method& AddMethod()
-	{
-		return Methods[Methods.Add(FHTNBuilder_Method())];
-	}
-
-	FHTNBuilder_Method& AddMethod(const FHTNCondition& Condition)
-	{
-		return Methods[Methods.Add(FHTNBuilder_Method(Condition))];
-	}
-
-	FHTNBuilder_Method& AddMethod(const TArray<FHTNCondition>& Conditions)
-	{
-		return Methods[Methods.Add(FHTNBuilder_Method(Conditions))];
-	}
-};
-
-struct HTNEDITOR_API FHTNBuilder_Domain
+struct HTNRUNTIME_API FHTNBuilder_Domain
 {
 	TSharedPtr<FHTNDomain> DomainInstance;
 	

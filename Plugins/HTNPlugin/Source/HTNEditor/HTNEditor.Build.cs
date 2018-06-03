@@ -38,9 +38,10 @@ public class HTNEditor : ModuleRules
 				"Projects",
 				"Slate",
 				"SlateCore",
-				"HTNRuntime",
 				"UnrealEd",
                 "KismetWidgets",
+                "HTNRuntime",
+                "AIModule",
             });
 
 		PrivateIncludePathModuleNames.AddRange(

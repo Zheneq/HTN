@@ -50,15 +50,10 @@ private:
 	/** Callback for property changes in the text asset. */
 	void HandleHTNAssetPropertyChanged(UObject* Object, FPropertyChangedEvent& PropertyChangedEvent);
 
-
-	FReply CreateNewPrimitiveTask();
-
 private:
 
 	/** Holds the editable text box widget. */
 	TSharedPtr<SMultiLineEditableTextBox> EditableTextBox;
-
-	TSharedPtr<SButton> BtnNewPrimitiveTask;
 
 	/** Pointer to the text asset that is being edited. */
 	UHTNAsset* HTNAsset;

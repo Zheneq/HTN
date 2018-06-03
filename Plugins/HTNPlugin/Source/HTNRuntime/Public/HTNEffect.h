@@ -5,6 +5,7 @@
 #include "BehaviorTree/BehaviorTreeTypes.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyAllTypes.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "HTNBlackboardKeySelector.h"
 
 #include "HTNEffect.generated.h"
 
@@ -15,7 +16,7 @@ struct FHTNEffect
 
 	/** blackboard key selector */
 	UPROPERTY(EditAnywhere, Category = Blackboard)
-		FBlackboardKeySelector BlackboardKey;
+		FHTNBlackboardKeySelector BlackboardKey;
 
 	/** operation type */
 //	UPROPERTY()

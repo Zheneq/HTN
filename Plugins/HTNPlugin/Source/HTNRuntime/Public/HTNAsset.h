@@ -19,12 +19,27 @@ class HTNRUNTIME_API UHTNAsset
 {
 	GENERATED_BODY()
 
+private:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintSetter = SetBlackboardData)
+		class UBlackboardData* BlackboardData;
+
 public:
+	class UBlackboardData* GetBlackboardData() { return BlackboardData; }
+
+	UFUNCTION(BlueprintSetter)
+		void SetBlackboardData(class UBlackboardData* NewBlackboard);
 
 #if WITH_EDITORONLY_DATA
+	DECLARE_MULTICAST_DELEGATE(FHTNEvent);
+
+	FHTNEvent OnBlackboardChanged;
 
 	UPROPERTY(EditAnywhere)
-		TArray<FHTNBuilder_PrimitiveTask> PrimitiveTasks;
+		TMap<FName, FHTNBuilder_PrimitiveTask> PrimitiveTasks;
+
+	UPROPERTY(EditAnywhere)
+		TMap<FName, FHTNBuilder_CompositeTask> CompositeTasks;
 
 
 #endif // WITH_EDITORONLY_DATA
