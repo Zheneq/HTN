@@ -5,6 +5,7 @@
 #include "Editor.h"
 #include "EditorReimportHandler.h"
 #include "EditorStyleSet.h"
+#include "HTNEditorLog.h"
 #include "HTNEditorWidget.h"
 #include "HTNCompositeTaskWidget.h"
 #include "HTNDomainWidget.h"
@@ -51,10 +52,6 @@ public:
 		HTNEditorPtr = InHTNEditor;
 		
 		SSingleObjectDetailsPanel::Construct(SSingleObjectDetailsPanel::FArguments().HostCommandList(InHTNEditor->GetToolkitCommands()).HostTabManager(InHTNEditor->GetTabManager()), /*bAutomaticallyObserveViaGetObjectToObserve=*/ true, /*bAllowSearch=*/ true);
-
-		//		TAttribute<ESpriteEditorMode::Type> SpriteEditorMode = TAttribute<ESpriteEditorMode::Type>::Create( TAttribute<ESpriteEditorMode::Type>::FGetter::CreateSP(InSpriteEditor.ToSharedRef(), &FSpriteEditor::GetCurrentMode));
-		//		FOnGetDetailCustomizationInstance CustomizeSpritesForEditor = FOnGetDetailCustomizationInstance::CreateStatic(&FSpriteDetailsCustomization::MakeInstanceForSpriteEditor, SpriteEditorMode);
-		//		PropertyView->RegisterInstancedCustomPropertyLayout(UPaperSprite::StaticClass(), CustomizeSpritesForEditor);
 	}
 
 	// SSingleObjectDetailsPanel interface
@@ -269,16 +266,15 @@ TSharedRef<SDockTab> FHTNEditorToolkit::HandleTabManagerSpawnTab(const FSpawnTab
 	if (TabIdentifier == HTNAssetEditorNames::TabId)
 	{
 		//TabWidget = SNew(SHTNEditor, HTNAsset, Style);
-		TabWidget = SNew(SHTNCompositeTask, this, Style);
+		TabWidget = SNew(SHTNCompositeTask, SharedThis(this), Style);
 	}
 	else if(TabIdentifier == HTNAssetEditorNames::DomainTabId)
 	{
-		TabWidget = SNew(SHTNDomain, HTNAsset, Style);
+		TabWidget = SNew(SHTNDomain, SharedThis(this), Style);
 	}
 	else if (TabIdentifier == HTNAssetEditorNames::DetailsTabId)
 	{
-		TSharedPtr<FHTNEditorToolkit> HTNEditorPtr = SharedThis(this);
-		TabWidget = SNew(SHTNPropertiesTabBody, HTNEditorPtr, Style);
+		TabWidget = SNew(SHTNPropertiesTabBody, SharedThis(this), Style);
 	}
 
 	return SNew(SDockTab)
@@ -304,6 +300,31 @@ FHTNBuilder_CompositeTask* FHTNEditorToolkit::GetSelectedCompositeTask() const
 		return &HTNAsset->CompositeTasks[SelectedTask];
 	}
 	return nullptr;
+}
+
+FHTNBuilder_PrimitiveTask* FHTNEditorToolkit::GetSelectedPrimitiveTask() const
+{
+	if (HTNAsset && HTNAsset->PrimitiveTasks.Contains(SelectedTask))
+	{
+		return &HTNAsset->PrimitiveTasks[SelectedTask];
+	}
+	return nullptr;
+}
+
+void FHTNEditorToolkit::SelectTask(FName TaskName)
+{
+	if (HTNAsset)
+	{
+		if (HTNAsset->PrimitiveTasks.Contains(TaskName) || HTNAsset->CompositeTasks.Contains(TaskName))
+		{
+			SelectedTask = TaskName;
+			// TODO: Update smth
+		}
+		else
+		{
+			UE_LOG(LogHTNEditor, Warning, TEXT("Attempted to select %s task which does not exist."), *TaskName.ToString());
+		}
+	}
 }
 
 

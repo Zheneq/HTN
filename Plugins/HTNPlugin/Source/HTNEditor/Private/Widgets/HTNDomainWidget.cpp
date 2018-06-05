@@ -9,21 +9,29 @@
 #include "HTNAsset.h"
 #include "UObject/Class.h"
 #include "Widgets/Views/SListView.h"
+#include "Widgets/Views/STableRow.h"
 #include "Widgets/Text/STextBlock.h"
+#include "Widgets/Input/SButton.h"
 
 #include "HTNEditorSettings.h"
 
 
 #define LOCTEXT_NAMESPACE "SHTNEditor"
 
+/* HTN Domain Widget
+************************************************************************************/
+
 SHTNDomain::~SHTNDomain()
 {
 	FCoreUObjectDelegates::OnObjectPropertyChanged.RemoveAll(this);
 }
 
-void SHTNDomain::Construct(const FArguments& InArgs, TWeakObjectPtr<UHTNAsset> InHTNAsset, const TSharedRef<ISlateStyle>& InStyle)
+void SHTNDomain::Construct(const FArguments& InArgs, TWeakPtr<FHTNEditorToolkit> InHTNEditor, const TSharedRef<ISlateStyle>& InStyle)
 {
-	HTNAsset = InHTNAsset;
+	check(InHTNEditor.IsValid());
+
+	HTNEditor = InHTNEditor;
+	HTNAsset = InHTNEditor.Pin()->GetAsset();
 	auto Settings = GetDefault<UHTNEditorSettings>();
 
 	ChildSlot
@@ -34,17 +42,44 @@ void SHTNDomain::Construct(const FArguments& InArgs, TWeakObjectPtr<UHTNAsset> I
 			+ SVerticalBox::Slot()
 				.FillHeight(1.0f)
 					[
-						SAssignNew(ListPrimitiveTasks, SVerticalBox)
+						SAssignNew(ListPrimitiveTasks, SHTNTaskListView)
+							.ItemHeight(24)
+							.ListItemsSource(&CachedPrimitiveTasks)
+							.OnGenerateRow(this, &SHTNDomain::CreateTaskWidget)
+							.SelectionMode(ESelectionMode::Single)
+							.OnSelectionChanged(this, &SHTNDomain::HandleTaskSelectionChanged)
+							.HeaderRow(
+								SNew(SHeaderRow)
+								+ SHeaderRow::Column("PrimTaskList")
+									[
+										SNew(STextBlock)
+											.Text(LOCTEXT("PrimTaskListCaption", "Primitive Tasks"))
+									]
+							)
 					]
 			+ SVerticalBox::Slot()
 				.FillHeight(1.0f)
 					[
-						SAssignNew(ListCompositeTasks, SVerticalBox)
+						SAssignNew(ListCompositeTasks, SHTNTaskListView)
+							.ItemHeight(24)
+							.ListItemsSource(&CachedCompositeTasks)
+							.OnGenerateRow(this, &SHTNDomain::CreateTaskWidget)
+							.SelectionMode(ESelectionMode::Single)
+							.OnSelectionChanged(this, &SHTNDomain::HandleTaskSelectionChanged)
+							.HeaderRow(
+								SNew(SHeaderRow)
+								+ SHeaderRow::Column("CompTaskList")
+									[
+										SNew(STextBlock)
+											.Text(LOCTEXT("CompTaskListCaption", "Composite Tasks"))
+									]
+							)
 					]
 		]
 	];
 
 	FCoreUObjectDelegates::OnObjectPropertyChanged.AddSP(this, &SHTNDomain::HandleAssetPropertyChanged);
+	Update();
 }
 
 /* callbacks
@@ -60,29 +95,76 @@ void SHTNDomain::HandleAssetPropertyChanged(UObject* Object, FPropertyChangedEve
 
 void SHTNDomain::Update()
 {
-	ListPrimitiveTasks->ClearChildren();
-	ListCompositeTasks->ClearChildren();
+	CachedPrimitiveTasks.Empty();
+	CachedCompositeTasks.Empty();
 
 	for (const auto& Task : HTNAsset->PrimitiveTasks)
 	{
-		ListPrimitiveTasks->AddSlot()[CreateTaskWidget(Task.Value)];
+		CachedPrimitiveTasks.Add(MakeShareable(new FHTNTaskViewModel(Task.Key, Task.Value)));
 	}
 
 	for (const auto& Task : HTNAsset->CompositeTasks)
 	{
-		ListCompositeTasks->AddSlot()[CreateTaskWidget(Task.Value)];
+		CachedCompositeTasks.Add(MakeShareable(new FHTNTaskViewModel(Task.Key, Task.Value)));
 	}
+
+	ListPrimitiveTasks->RequestListRefresh();
+	ListCompositeTasks->RequestListRefresh();
 }
 
+/*
 TSharedRef<SWidget> SHTNDomain::CreateTaskWidget(const FHTNBuilder_PrimitiveTask& Task)
 {
-	return SNew(STextBlock).Text(FText::FromName(Task.Name));
+	return CreateTaskWidget(Task.Name, FText::FromName(Task.Name), false);
 }
 
 TSharedRef<SWidget> SHTNDomain::CreateTaskWidget(const FHTNBuilder_CompositeTask& Task)
 {
-	return SNew(STextBlock).Text(FText::FromName(Task.Name));
+	return CreateTaskWidget(Task.Name, FText::FromName(Task.Name), false);
 }
 
+TSharedRef<SWidget> SHTNDomain::CreateTaskWidget(const FName& Name, const FText& DisplayName, bool bRoot)
+{
+	return
+		SNew(SButton)
+//		.OnClicked(&SHTNDomain::HandleSelectTask, Name)
+		[
+			SNew(STextBlock)
+			.Text(DisplayName)
+		];
+}
+*/
+
+TSharedRef<ITableRow> SHTNDomain::CreateTaskWidget(TSharedPtr<FHTNTaskViewModel> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	return
+		SNew(STableRow<TSharedPtr<FHTNTaskViewModel>>, OwnerTable)
+		[
+			SNew(STextBlock)
+			.Text(InItem->DisplayName)
+		];
+}
+
+void SHTNDomain::HandleTaskSelectionChanged(TSharedPtr<FHTNTaskViewModel> SelectedItem, ESelectInfo::Type SelectInfo)
+{
+	if (SelectedItem.IsValid())
+	{
+		// Clear selection in the other list
+		if (SelectedItem->bIsComposite)
+		{
+			ListPrimitiveTasks->ClearSelection();
+		}
+		else
+		{
+			ListCompositeTasks->ClearSelection();
+		}
+
+		if (HTNEditor.IsValid())
+		{
+			HTNEditor.Pin()->SelectTask(SelectedItem->Name);
+		}
+	}
+}
 
 #undef LOCTEXT_NAMESPACE
+

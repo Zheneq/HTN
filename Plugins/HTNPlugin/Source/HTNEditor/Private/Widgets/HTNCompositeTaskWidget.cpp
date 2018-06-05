@@ -28,7 +28,7 @@ SHTNCompositeTask::~SHTNCompositeTask()
 }
 
 
-void SHTNCompositeTask::Construct(const FArguments& InArgs, FHTNEditorToolkit* InHTNEditor, const TSharedRef<ISlateStyle>& InStyle)
+void SHTNCompositeTask::Construct(const FArguments& InArgs, TWeakPtr<FHTNEditorToolkit> InHTNEditor, const TSharedRef<ISlateStyle>& InStyle)
 {
 	HTNEditor = InHTNEditor;
 	Style = InStyle;
@@ -58,7 +58,7 @@ void SHTNCompositeTask::Update()
 {
 	UE_LOG(LogHTNEditor, Log, TEXT("SHTNCompositeTask::Update"));
 
-	FHTNBuilder_CompositeTask* CompTask = HTNEditor ? HTNEditor->GetSelectedCompositeTask() : nullptr;
+	FHTNBuilder_CompositeTask* CompTask = HTNEditor.IsValid() ? HTNEditor.Pin()->GetSelectedCompositeTask() : nullptr;
 
 	if (CompTask)
 	{
@@ -66,7 +66,7 @@ void SHTNCompositeTask::Update()
 
 		for (const FHTNBuilder_Method& Method : CompTask->Methods)
 		{
-			TSharedPtr<SHTNMethod> Widget = SNew(SHTNMethod, HTNEditor->GetAsset(), Style.ToSharedRef());
+			TSharedPtr<SHTNMethod> Widget = SNew(SHTNMethod, HTNEditor.Pin()->GetAsset(), Style.ToSharedRef());
 			Widget->Update(Method);
 			PanelRoot->AddSlot()[Widget.ToSharedRef()];
 		}
@@ -80,7 +80,7 @@ void SHTNCompositeTask::Update()
 
 void SHTNCompositeTask::HandleAssetPropertyChanged(UObject* Object, FPropertyChangedEvent& PropertyChangedEvent)
 {
-	if (HTNEditor && Object == HTNEditor->GetAsset())
+	if (HTNEditor.IsValid() && Object == HTNEditor.Pin()->GetAsset())
 	{
 		Update();
 	}
@@ -89,7 +89,7 @@ void SHTNCompositeTask::HandleAssetPropertyChanged(UObject* Object, FPropertyCha
 
 FReply SHTNCompositeTask::HandleNewMethod()
 {
-	FHTNBuilder_CompositeTask* CompTask = HTNEditor ? HTNEditor->GetSelectedCompositeTask() : nullptr;
+	FHTNBuilder_CompositeTask* CompTask = HTNEditor.IsValid() ? HTNEditor.Pin()->GetSelectedCompositeTask() : nullptr;
 	if (CompTask)
 	{
 		CompTask->Methods.AddDefaulted();

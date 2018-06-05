@@ -17,9 +17,6 @@ struct HTNRUNTIME_API FHTNBuilder_PrimitiveTask
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
-		FName Name;
-
-	UPROPERTY(EditAnywhere)
 		FText DisplayName;
 
 	UPROPERTY(EditAnywhere)
@@ -52,9 +49,6 @@ USTRUCT()
 struct HTNRUNTIME_API FHTNBuilder_CompositeTask
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere)
-		FName Name;
 
 	UPROPERTY(EditAnywhere)
 		FText DisplayName;

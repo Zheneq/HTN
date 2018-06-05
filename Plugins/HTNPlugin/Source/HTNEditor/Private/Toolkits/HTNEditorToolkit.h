@@ -86,10 +86,12 @@ public:
 
 	TWeakObjectPtr<UHTNAsset> GetAsset() { return HTNAsset; }
 
-	// Returns the Composite task which is currently selected (nullptr if none selected)
+	// Returns the task which is currently selected (nullptr if none selected)
+	// The pointer is volatile, do not store it
+	FHTNBuilder_PrimitiveTask* GetSelectedPrimitiveTask() const;
 	FHTNBuilder_CompositeTask* GetSelectedCompositeTask() const;
 
-	void SelectCompositeTask(FName Name);
+	void SelectTask(FName Name);
 
 private:
 

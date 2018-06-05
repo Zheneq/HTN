@@ -37,7 +37,7 @@ public:
 	 * @param InHTNEditor The UHTNEditorToolkit to represent.
 	 * @param InStyleSet The style set to use.
 	 */
-	void Construct(const FArguments& InArgs, class FHTNEditorToolkit* InHTNEditor, const TSharedRef<ISlateStyle>& InStyle);
+	void Construct(const FArguments& InArgs, TWeakPtr<class FHTNEditorToolkit> InHTNEditor, const TSharedRef<ISlateStyle>& InStyle);
 
 private:
 
@@ -55,5 +55,5 @@ private:
 	TSharedPtr<SWrapBox> PanelRoot;
 	TSharedPtr<SButton> ButtonNewMethod;
 
-	class FHTNEditorToolkit* HTNEditor;
+	TWeakPtr<class FHTNEditorToolkit> HTNEditor;
 };
