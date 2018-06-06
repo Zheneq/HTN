@@ -34,6 +34,9 @@ void SHTNDomain::Construct(const FArguments& InArgs, TWeakPtr<FHTNEditorToolkit>
 	HTNAsset = InHTNEditor.Pin()->GetAsset();
 	auto Settings = GetDefault<UHTNEditorSettings>();
 
+	ListPrimitiveTasks = MakeListWidget(&CachedPrimitiveTasks, LOCTEXT("PrimTaskListCaption", "Primitive Tasks"));
+	ListCompositeTasks = MakeListWidget(&CachedCompositeTasks, LOCTEXT("CompTaskListCaption", "Composite Tasks"));
+
 	ChildSlot
 	[
 		SNew(SBorder)
@@ -42,44 +45,36 @@ void SHTNDomain::Construct(const FArguments& InArgs, TWeakPtr<FHTNEditorToolkit>
 			+ SVerticalBox::Slot()
 				.FillHeight(1.0f)
 					[
-						SAssignNew(ListPrimitiveTasks, SHTNTaskListView)
-							.ItemHeight(24)
-							.ListItemsSource(&CachedPrimitiveTasks)
-							.OnGenerateRow(this, &SHTNDomain::CreateTaskWidget)
-							.SelectionMode(ESelectionMode::Single)
-							.OnSelectionChanged(this, &SHTNDomain::HandleTaskSelectionChanged)
-							.HeaderRow(
-								SNew(SHeaderRow)
-								+ SHeaderRow::Column("PrimTaskList")
-									[
-										SNew(STextBlock)
-											.Text(LOCTEXT("PrimTaskListCaption", "Primitive Tasks"))
-									]
-							)
+						ListPrimitiveTasks.ToSharedRef()
 					]
 			+ SVerticalBox::Slot()
 				.FillHeight(1.0f)
 					[
-						SAssignNew(ListCompositeTasks, SHTNTaskListView)
-							.ItemHeight(24)
-							.ListItemsSource(&CachedCompositeTasks)
-							.OnGenerateRow(this, &SHTNDomain::CreateTaskWidget)
-							.SelectionMode(ESelectionMode::Single)
-							.OnSelectionChanged(this, &SHTNDomain::HandleTaskSelectionChanged)
-							.HeaderRow(
-								SNew(SHeaderRow)
-								+ SHeaderRow::Column("CompTaskList")
-									[
-										SNew(STextBlock)
-											.Text(LOCTEXT("CompTaskListCaption", "Composite Tasks"))
-									]
-							)
+						ListCompositeTasks.ToSharedRef()
 					]
 		]
 	];
 
 	FCoreUObjectDelegates::OnObjectPropertyChanged.AddSP(this, &SHTNDomain::HandleAssetPropertyChanged);
 	Update();
+}
+
+TSharedRef<SHTNDomain::SHTNTaskListView> SHTNDomain::MakeListWidget(const TArray<TSharedPtr<FHTNTaskViewModel>>* ListItemsSource, const FText& Caption)
+{
+	return SNew(SHTNTaskListView)
+		.ItemHeight(24)
+		.ListItemsSource(ListItemsSource)
+		.OnGenerateRow(this, &SHTNDomain::CreateTaskWidget)
+		.SelectionMode(ESelectionMode::Single)
+		.OnSelectionChanged(this, &SHTNDomain::HandleTaskSelectionChanged)
+		.HeaderRow(
+			SNew(SHeaderRow)
+			+ SHeaderRow::Column("TaskList")
+			[
+				SNew(STextBlock)
+				.Text(Caption)
+			]
+		);
 }
 
 /* callbacks

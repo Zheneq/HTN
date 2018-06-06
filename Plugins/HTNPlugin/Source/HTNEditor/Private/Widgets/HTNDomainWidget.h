@@ -56,6 +56,8 @@ private:
 	TArray<TSharedPtr<FHTNTaskViewModel>> CachedPrimitiveTasks;
 	TArray<TSharedPtr<FHTNTaskViewModel>> CachedCompositeTasks;
 
+	TSharedRef<SHTNTaskListView> MakeListWidget(const TArray<TSharedPtr<FHTNTaskViewModel>>* ListItemsSource, const FText& Caption);
+
 
 private:
 	/** Callback for property changes in the text asset. */
