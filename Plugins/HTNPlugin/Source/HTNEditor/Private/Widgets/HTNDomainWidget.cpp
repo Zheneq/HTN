@@ -8,15 +8,18 @@
 #include "HTNBuilder.h"
 #include "HTNAsset.h"
 #include "UObject/Class.h"
-#include "Widgets/Views/SListView.h"
-#include "Widgets/Views/STableRow.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SButton.h"
+#include "Widgets/Images/SImage.h"
+
+#include "EditorStyleSet.h"
+#include "DetailLayoutBuilder.h"
 
 #include "HTNEditorSettings.h"
 
 
 #define LOCTEXT_NAMESPACE "SHTNEditor"
+
 
 /* HTN Domain Widget
 ************************************************************************************/
@@ -34,9 +37,6 @@ void SHTNDomain::Construct(const FArguments& InArgs, TWeakPtr<FHTNEditorToolkit>
 	HTNAsset = InHTNEditor.Pin()->GetAsset();
 	auto Settings = GetDefault<UHTNEditorSettings>();
 
-	ListPrimitiveTasks = MakeListWidget(&CachedPrimitiveTasks, LOCTEXT("PrimTaskListCaption", "Primitive Tasks"));
-	ListCompositeTasks = MakeListWidget(&CachedCompositeTasks, LOCTEXT("CompTaskListCaption", "Composite Tasks"));
-
 	ChildSlot
 	[
 		SNew(SBorder)
@@ -45,36 +45,30 @@ void SHTNDomain::Construct(const FArguments& InArgs, TWeakPtr<FHTNEditorToolkit>
 			+ SVerticalBox::Slot()
 				.FillHeight(1.0f)
 					[
-						ListPrimitiveTasks.ToSharedRef()
+						SAssignNew(ListPrimitiveTasks, SHTNTaskListView)
+							.OnGenerateRow(this, &SHTNDomain::CreateTaskWidget)
+							.OnSelectionChanged(this, &SHTNDomain::HandleTaskSelectionChanged)
+//							.OnAddNewClicked()
+							.ListItemsSource(&CachedPrimitiveTasks)
+							.ListCaption(LOCTEXT("PrimTaskListCaption", "Primitive Tasks"))
+							.AddNewCaption(LOCTEXT("NewPrimTaskBtnCaption", "New Primitive Task"))
 					]
 			+ SVerticalBox::Slot()
 				.FillHeight(1.0f)
 					[
-						ListCompositeTasks.ToSharedRef()
+						SAssignNew(ListCompositeTasks, SHTNTaskListView)
+							.OnGenerateRow(this, &SHTNDomain::CreateTaskWidget)
+							.OnSelectionChanged(this, &SHTNDomain::HandleTaskSelectionChanged)
+//							.OnAddNewClicked()
+							.ListItemsSource(&CachedCompositeTasks)
+							.ListCaption(LOCTEXT("CompTaskListCaption", "Composite Tasks"))
+							.AddNewCaption(LOCTEXT("NewCompTaskBtnCaption", "New Composite Task"))
 					]
 		]
 	];
 
 	FCoreUObjectDelegates::OnObjectPropertyChanged.AddSP(this, &SHTNDomain::HandleAssetPropertyChanged);
 	Update();
-}
-
-TSharedRef<SHTNDomain::SHTNTaskListView> SHTNDomain::MakeListWidget(const TArray<TSharedPtr<FHTNTaskViewModel>>* ListItemsSource, const FText& Caption)
-{
-	return SNew(SHTNTaskListView)
-		.ItemHeight(24)
-		.ListItemsSource(ListItemsSource)
-		.OnGenerateRow(this, &SHTNDomain::CreateTaskWidget)
-		.SelectionMode(ESelectionMode::Single)
-		.OnSelectionChanged(this, &SHTNDomain::HandleTaskSelectionChanged)
-		.HeaderRow(
-			SNew(SHeaderRow)
-			+ SHeaderRow::Column("TaskList")
-			[
-				SNew(STextBlock)
-				.Text(Caption)
-			]
-		);
 }
 
 /* callbacks
@@ -103,32 +97,9 @@ void SHTNDomain::Update()
 		CachedCompositeTasks.Add(MakeShareable(new FHTNTaskViewModel(Task.Key, Task.Value)));
 	}
 
-	ListPrimitiveTasks->RequestListRefresh();
-	ListCompositeTasks->RequestListRefresh();
+	ListPrimitiveTasks->Update();
+	ListCompositeTasks->Update();
 }
-
-/*
-TSharedRef<SWidget> SHTNDomain::CreateTaskWidget(const FHTNBuilder_PrimitiveTask& Task)
-{
-	return CreateTaskWidget(Task.Name, FText::FromName(Task.Name), false);
-}
-
-TSharedRef<SWidget> SHTNDomain::CreateTaskWidget(const FHTNBuilder_CompositeTask& Task)
-{
-	return CreateTaskWidget(Task.Name, FText::FromName(Task.Name), false);
-}
-
-TSharedRef<SWidget> SHTNDomain::CreateTaskWidget(const FName& Name, const FText& DisplayName, bool bRoot)
-{
-	return
-		SNew(SButton)
-//		.OnClicked(&SHTNDomain::HandleSelectTask, Name)
-		[
-			SNew(STextBlock)
-			.Text(DisplayName)
-		];
-}
-*/
 
 TSharedRef<ITableRow> SHTNDomain::CreateTaskWidget(TSharedPtr<FHTNTaskViewModel> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
@@ -147,11 +118,11 @@ void SHTNDomain::HandleTaskSelectionChanged(TSharedPtr<FHTNTaskViewModel> Select
 		// Clear selection in the other list
 		if (SelectedItem->bIsComposite)
 		{
-			ListPrimitiveTasks->ClearSelection();
+			ListPrimitiveTasks->AsListView()->ClearSelection();
 		}
 		else
 		{
-			ListCompositeTasks->ClearSelection();
+			ListCompositeTasks->AsListView()->ClearSelection();
 		}
 
 		if (HTNEditor.IsValid())

@@ -5,12 +5,11 @@
 #include "Templates/SharedPointer.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/SCompoundWidget.h"
+#include "Widgets/HTNTaskListWidget.h"
 
 class FText;
 class ISlateStyle;
 class UHTNAsset;
-
-template <typename ItemType> class SListView;
 
 /**
  * Implements the UTextAsset asset editor widget.
@@ -51,13 +50,10 @@ private:
 			Name(TaskName), DisplayName(Task.DisplayName), bRoot(false), bIsComposite(true) {}
 	};
 
-	typedef SListView<TSharedPtr<FHTNTaskViewModel>> SHTNTaskListView;
+	typedef SHTNTaskList<TSharedPtr<FHTNTaskViewModel>> SHTNTaskListView;
 
 	TArray<TSharedPtr<FHTNTaskViewModel>> CachedPrimitiveTasks;
 	TArray<TSharedPtr<FHTNTaskViewModel>> CachedCompositeTasks;
-
-	TSharedRef<SHTNTaskListView> MakeListWidget(const TArray<TSharedPtr<FHTNTaskViewModel>>* ListItemsSource, const FText& Caption);
-
 
 private:
 	/** Callback for property changes in the text asset. */
@@ -67,9 +63,6 @@ private:
 
 	void Update();
 
-//	TSharedRef<SWidget> CreateTaskWidget(const struct FHTNBuilder_PrimitiveTask& Task);
-//	TSharedRef<SWidget> CreateTaskWidget(const struct FHTNBuilder_CompositeTask& Task);
-//	TSharedRef<SWidget> CreateTaskWidget(const FName& Name, const FText& DisplayName, bool bRoot);
 	TSharedRef<class ITableRow> CreateTaskWidget(TSharedPtr<FHTNTaskViewModel> InItem, const TSharedRef<class STableViewBase>& OwnerTable);
 
 private:
