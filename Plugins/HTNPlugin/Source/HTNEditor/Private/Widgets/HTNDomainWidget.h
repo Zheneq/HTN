@@ -23,6 +23,9 @@ public:
 	SLATE_END_ARGS()
 
 public:
+	SHTNDomain() :
+		PendingRenameTaskId(INDEX_NONE)
+	{}
 
 	/** Virtual destructor. */
 	virtual ~SHTNDomain();
@@ -39,15 +42,15 @@ public:
 private:
 	struct FHTNTaskViewModel
 	{
-		FName Name;
+		int32 Id;
 		FText DisplayName;
 		bool bRoot;
 		bool bIsComposite;
 
-		FHTNTaskViewModel(FName TaskName, FHTNBuilder_PrimitiveTask Task) :
-			Name(TaskName), DisplayName(Task.DisplayName), bRoot(false), bIsComposite(false) {}
-		FHTNTaskViewModel(FName TaskName, FHTNBuilder_CompositeTask Task) :
-			Name(TaskName), DisplayName(Task.DisplayName), bRoot(false), bIsComposite(true) {}
+		FHTNTaskViewModel(int32 TaskId, FHTNBuilder_PrimitiveTask Task) :
+			Id(TaskId), DisplayName(Task.DisplayName), bRoot(false), bIsComposite(false) {}
+		FHTNTaskViewModel(int32 TaskId, FHTNBuilder_CompositeTask Task) :
+			Id(TaskId), DisplayName(Task.DisplayName), bRoot(false), bIsComposite(true) {}
 	};
 
 	typedef SHTNTaskList<TSharedPtr<FHTNTaskViewModel>> SHTNTaskListView;
@@ -64,6 +67,16 @@ private:
 	void Update();
 
 	TSharedRef<class ITableRow> CreateTaskWidget(TSharedPtr<FHTNTaskViewModel> InItem, const TSharedRef<class STableViewBase>& OwnerTable);
+
+	// Button callbacks
+	FReply HandleNewPrimitiveTask();
+	FReply HandleNewCompositeTask();
+
+	// Task we want to rename ASAP
+	int32 PendingRenameTaskId;
+
+	void RenameTask(int32 TaskId, const FText& NewName);
+
 
 private:
 	TWeakPtr<class FHTNEditorToolkit> HTNEditor;

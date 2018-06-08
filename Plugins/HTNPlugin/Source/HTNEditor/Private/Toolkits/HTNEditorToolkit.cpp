@@ -5,6 +5,7 @@
 #include "Editor.h"
 #include "EditorReimportHandler.h"
 #include "EditorStyleSet.h"
+#include "ScopedTransaction.h"
 #include "HTNEditorLog.h"
 #include "HTNEditorWidget.h"
 #include "HTNCompositeTaskWidget.h"
@@ -161,6 +162,18 @@ void FHTNEditorToolkit::Initialize(UHTNAsset* InHTNAsset, const EToolkitMode::Ty
 		InHTNAsset
 	);
 
+	SelectedTaskId = INDEX_NONE;
+
+	{
+		TArray<int32> Keys;
+		int32 max1, max2;
+		HTNAsset->GetPrimitiveTasks().GetKeys(Keys);
+		max1 = FMath::Max<int32>(Keys);
+		HTNAsset->GetCompositeTasks().GetKeys(Keys);
+		max2 = FMath::Max<int32>(Keys);
+		MaxTaskId = max1 > max2 ? max1 : max2;
+	}
+
 	RegenerateMenusAndToolbars();
 }
 
@@ -265,7 +278,6 @@ TSharedRef<SDockTab> FHTNEditorToolkit::HandleTabManagerSpawnTab(const FSpawnTab
 
 	if (TabIdentifier == HTNAssetEditorNames::TabId)
 	{
-		//TabWidget = SNew(SHTNEditor, HTNAsset, Style);
 		TabWidget = SNew(SHTNCompositeTask, SharedThis(this), Style);
 	}
 	else if(TabIdentifier == HTNAssetEditorNames::DomainTabId)
@@ -293,39 +305,109 @@ UObject* FHTNEditorToolkit::GetObjectForDetailsPanel() const
 	return HTNAsset;
 }
 
-FHTNBuilder_CompositeTask* FHTNEditorToolkit::GetSelectedCompositeTask() const
+const FHTNBuilder_CompositeTask* FHTNEditorToolkit::GetSelectedCompositeTask() const
 {
-	if (HTNAsset && HTNAsset->CompositeTasks.Contains(SelectedTask))
+	if (HTNAsset->GetCompositeTasks().Contains(SelectedTaskId))
 	{
-		return &HTNAsset->CompositeTasks[SelectedTask];
+		return &HTNAsset->GetCompositeTasks()[SelectedTaskId];
 	}
 	return nullptr;
 }
 
-FHTNBuilder_PrimitiveTask* FHTNEditorToolkit::GetSelectedPrimitiveTask() const
+const FHTNBuilder_PrimitiveTask* FHTNEditorToolkit::GetSelectedPrimitiveTask() const
 {
-	if (HTNAsset && HTNAsset->PrimitiveTasks.Contains(SelectedTask))
+	if (HTNAsset->GetPrimitiveTasks().Contains(SelectedTaskId))
 	{
-		return &HTNAsset->PrimitiveTasks[SelectedTask];
+		return &HTNAsset->GetPrimitiveTasks()[SelectedTaskId];
 	}
 	return nullptr;
 }
 
-void FHTNEditorToolkit::SelectTask(FName TaskName)
+void FHTNEditorToolkit::SelectTask(int32 TaskId)
 {
-	if (HTNAsset)
+	if (HTNAsset->GetPrimitiveTasks().Contains(TaskId) || HTNAsset->GetCompositeTasks().Contains(TaskId))
 	{
-		if (HTNAsset->PrimitiveTasks.Contains(TaskName) || HTNAsset->CompositeTasks.Contains(TaskName))
+		SelectedTaskId = TaskId;
+		// TODO: Update smth
+	}
+	else
+	{
+		UE_LOG(LogHTNEditor, Warning, TEXT("Attempted to select %d task which does not exist."), TaskId);
+	}
+}
+
+void FHTNEditorToolkit::AddNewMethodToSelectedCompositeTask()
+{
+	if (GetSelectedCompositeTask())
+	{
+		HTNAsset->CompositeTasks[SelectedTaskId].Methods.AddDefaulted();
+	}
+	else
+	{
+		UE_LOG(LogHTNEditor, Warning, TEXT("FHTNEditorToolkit::AddNewMethodToSelectedCompositeTask: No Composite task selected!"));
+	}
+}
+
+void FHTNEditorToolkit::RenameTask(int TaskId, const FText& NewName)
+{
+	if (HTNAsset->GetPrimitiveTasks().Contains(TaskId) || HTNAsset->GetCompositeTasks().Contains(TaskId))
+	{
+		const FScopedTransaction Transaction(LOCTEXT("RenameTaskAction", "Rename task"));
+
+		if (HTNAsset->Modify())
 		{
-			SelectedTask = TaskName;
-			// TODO: Update smth
+			if (HTNAsset->GetPrimitiveTasks().Contains(TaskId))
+			{
+				HTNAsset->PrimitiveTasks[TaskId].DisplayName = NewName;
+
+			}
+			else
+			{
+				HTNAsset->CompositeTasks[TaskId].DisplayName = NewName;
+			}
+			HTNAsset->PostEditChange();
 		}
 		else
 		{
-			UE_LOG(LogHTNEditor, Warning, TEXT("Attempted to select %s task which does not exist."), *TaskName.ToString());
+			UE_LOG(LogHTNEditor, Warning, TEXT("FHTNEditorToolkit::RenameTask: Cannot modify the asset!"));
 		}
+	}
+	else
+	{
+		UE_LOG(LogHTNEditor, Warning, TEXT("FHTNEditorToolkit::RenameTask (%s): Task %d does not exist!"), *NewName.ToString(), TaskId);
 	}
 }
 
+int32 FHTNEditorToolkit::NewPrimitiveTask()
+{
+	const FScopedTransaction Transaction(LOCTEXT("NewPrimitiveTaskAction", "New primitive task"));
+	return NewTask_internal(HTNAsset->PrimitiveTasks, LOCTEXT("NewPrimitiveTaskNameFormat", "PrimitiveTask{0}"));
+}
+
+int32 FHTNEditorToolkit::NewCompositeTask()
+{
+	const FScopedTransaction Transaction(LOCTEXT("NewCompositeTaskAction", "New composite task"));
+	return NewTask_internal(HTNAsset->CompositeTasks, LOCTEXT("NewCompositeTaskNameFromat", "CompositeTask{0}"));
+}
+
+template<typename Task>
+int32 FHTNEditorToolkit::NewTask_internal(TMap<int32, Task>& TaskMap, const FText& TaskNameFormat)
+{
+	check(!HTNAsset->GetPrimitiveTasks().Contains(MaxTaskId + 1) && !HTNAsset->GetCompositeTasks().Contains(MaxTaskId + 1));
+
+	if (HTNAsset->Modify())
+	{
+		auto& NewTask = TaskMap.Add(++MaxTaskId);
+		NewTask.DisplayName = FText::Format(TaskNameFormat, MaxTaskId);
+
+		HTNAsset->PostEditChange();
+		return MaxTaskId;
+	}
+	else
+	{
+		UE_LOG(LogHTNEditor, Warning, TEXT("FHTNEditorToolkit::NewTask_internal: Cannot modify the asset!"));
+	}
+	return INDEX_NONE;
+}
 
 #undef LOCTEXT_NAMESPACE

@@ -10,13 +10,100 @@
 #include "Framework/SlateDelegates.h"
 #include "Widgets/Views/SListView.h"
 #include "Widgets/Views/STableRow.h"
+#include "Widgets/Images/SImage.h"
+#include "Widgets/Text/SInlineEditableTextBlock.h"
 
+
+#define LOCTEXT_NAMESPACE "SHTNEditor"
+
+class SHTNTaskListItem
+	: public SCompoundWidget
+{
+public:
+	DECLARE_DELEGATE_TwoParams(FOnRenamed, int32, const FText&);
+
+	SLATE_BEGIN_ARGS(SHTNTaskListItem) {}
+	SLATE_ATTRIBUTE(FText, TaskName);
+	SLATE_ARGUMENT(int32, TaskId);
+	SLATE_EVENT(FOnRenamed, OnRenamed);
+	SLATE_END_ARGS()
+
+	FOnRenamed OnRenamed;
+	int32 TaskId;
+
+	SHTNTaskListItem() :
+		TaskId(INDEX_NONE)
+	{}
+
+	void Construct(const FArguments& InArgs)
+	{
+		FSlateFontInfo NameFont = FCoreStyle::GetDefaultFontStyle("Regular", 10);
+
+		// Find icons
+		const FSlateBrush* IconBrush = FEditorStyle::GetBrush(TEXT("NoBrush"));
+		FSlateColor IconColor = FSlateColor::UseForeground();
+//		FText IconToolTip = GraphAction->GetTooltipDescription();
+		bool bIsReadOnly = false;
+
+		// Create the actual widget
+		this->ChildSlot
+		[
+			SNew(SHorizontalBox)
+			// Icon slot
+			+SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNew(SImage)
+//				.ToolTipText(IconToolTip)
+				.Image(IconBrush)
+				.ColorAndOpacity(IconColor)
+			]
+			// Name slot
+			+SHorizontalBox::Slot()
+			.FillWidth(1.f)
+			.VAlign(VAlign_Center)
+			.Padding(3,0)
+			[
+				SNew(SInlineEditableTextBlock)
+				.Text(InArgs._TaskName)
+				.Font(NameFont)
+//				.HighlightText(InCreateData->HighlightText)
+//				.ToolTipText(InArgs._ToolTipText)
+				.OnTextCommitted(this, &SHTNTaskListItem::OnTextCommitted)
+//				.OnVerifyTextChanged(InArgs._OnNameTextVerifyChanged)
+//				.IsSelected(InArgs._IsRowSelectedDelegate)
+				.IsReadOnly(bIsReadOnly)
+			]
+			+SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNew(STextBlock)
+				.Text(FText::Format(LOCTEXT("HTNTaskIdFormat", "[{0}]"), InArgs._TaskId))
+				.Font(NameFont)
+				.RenderOpacity(0.2f)
+			]
+		];
+
+		OnRenamed = InArgs._OnRenamed;
+		TaskId = InArgs._TaskId;
+	}
+
+
+	void OnTextCommitted(const FText& NewText, ETextCommit::Type CommitType)
+	{
+		if (OnRenamed.IsBound())
+		{
+			OnRenamed.Execute(TaskId, NewText);
+		}
+	}
+};
 
 template <typename ItemType>
 class SHTNTaskList
 	: public SCompoundWidget
 {
 public:
+	// typedefs from SListView to keep slate args section clean
 	typedef typename TListTypeTraits< ItemType >::NullableType NullableItemType;
 
 	typedef typename TSlateDelegates< ItemType >::FOnGenerateRow FOnGenerateRow;
@@ -119,6 +206,11 @@ public:
 		return ListWidget;
 	}
 
+	void RequestRename(int32 TaskId)
+	{
+		// TODO
+	}
+
 private:
 	TSharedPtr<SListView<ItemType>> ListWidget;
 
@@ -184,3 +276,6 @@ private:
 		}
 	}
 };
+
+#undef LOCTEXT_NAMESPACE
+

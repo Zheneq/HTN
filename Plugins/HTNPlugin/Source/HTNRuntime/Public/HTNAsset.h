@@ -21,30 +21,38 @@ class HTNRUNTIME_API UHTNAsset
 
 private:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintSetter = SetBlackboardData)
+	UPROPERTY(EditDefaultsOnly)
 		class UBlackboardData* BlackboardData;
 
 public:
 	class UBlackboardData* GetBlackboardData() { return BlackboardData; }
-
-	UFUNCTION(BlueprintSetter)
-		void SetBlackboardData(class UBlackboardData* NewBlackboard);
 
 #if WITH_EDITORONLY_DATA
 	DECLARE_MULTICAST_DELEGATE(FHTNEvent);
 
 	FHTNEvent OnBlackboardChanged;
 
+#endif // WITH_EDITORONLY_DATA
+
+private:
+#if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere)
-		TMap<FName, FHTNBuilder_PrimitiveTask> PrimitiveTasks;
+		TMap<int32, FHTNBuilder_PrimitiveTask> PrimitiveTasks;
 
 	UPROPERTY(EditAnywhere)
-		TMap<FName, FHTNBuilder_CompositeTask> CompositeTasks;
+		TMap<int32, FHTNBuilder_CompositeTask> CompositeTasks;
 
 
 #endif // WITH_EDITORONLY_DATA
 
+public:
 	/** Holds the stored text. */
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="TextAsset")
 	FText Text;
+
+public:
+	const TMap<int32, FHTNBuilder_PrimitiveTask>& GetPrimitiveTasks() { return PrimitiveTasks; }
+	const TMap<int32, FHTNBuilder_CompositeTask>& GetCompositeTasks() { return CompositeTasks; }
+
+	friend class FHTNEditorToolkit;
 };

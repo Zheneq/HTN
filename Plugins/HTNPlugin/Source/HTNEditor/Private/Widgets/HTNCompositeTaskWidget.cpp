@@ -58,7 +58,7 @@ void SHTNCompositeTask::Update()
 {
 	UE_LOG(LogHTNEditor, Log, TEXT("SHTNCompositeTask::Update"));
 
-	FHTNBuilder_CompositeTask* CompTask = HTNEditor.IsValid() ? HTNEditor.Pin()->GetSelectedCompositeTask() : nullptr;
+	const FHTNBuilder_CompositeTask* CompTask = HTNEditor.IsValid() ? HTNEditor.Pin()->GetSelectedCompositeTask() : nullptr;
 
 	if (CompTask)
 	{
@@ -89,18 +89,11 @@ void SHTNCompositeTask::HandleAssetPropertyChanged(UObject* Object, FPropertyCha
 
 FReply SHTNCompositeTask::HandleNewMethod()
 {
-	FHTNBuilder_CompositeTask* CompTask = HTNEditor.IsValid() ? HTNEditor.Pin()->GetSelectedCompositeTask() : nullptr;
-	if (CompTask)
+	if (HTNEditor.IsValid())
 	{
-		CompTask->Methods.AddDefaulted();
-
-		// TODO: Remove if redundant
-		Update();
+		HTNEditor.Pin()->AddNewMethodToSelectedCompositeTask();
 	}
-	else
-	{
-		UE_LOG(LogHTNEditor, Warning, TEXT("SHTNCompositeTask::HandleNewMethod: No Composite task selected!"));
-	}
+	
 	return FReply::Handled();
 }
 

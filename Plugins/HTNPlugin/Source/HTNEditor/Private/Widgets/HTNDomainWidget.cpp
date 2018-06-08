@@ -48,7 +48,7 @@ void SHTNDomain::Construct(const FArguments& InArgs, TWeakPtr<FHTNEditorToolkit>
 						SAssignNew(ListPrimitiveTasks, SHTNTaskListView)
 							.OnGenerateRow(this, &SHTNDomain::CreateTaskWidget)
 							.OnSelectionChanged(this, &SHTNDomain::HandleTaskSelectionChanged)
-//							.OnAddNewClicked()
+							.OnAddNewClicked(this, &SHTNDomain::HandleNewPrimitiveTask)
 							.ListItemsSource(&CachedPrimitiveTasks)
 							.ListCaption(LOCTEXT("PrimTaskListCaption", "Primitive Tasks"))
 							.AddNewCaption(LOCTEXT("NewPrimTaskBtnCaption", "New Primitive Task"))
@@ -59,7 +59,7 @@ void SHTNDomain::Construct(const FArguments& InArgs, TWeakPtr<FHTNEditorToolkit>
 						SAssignNew(ListCompositeTasks, SHTNTaskListView)
 							.OnGenerateRow(this, &SHTNDomain::CreateTaskWidget)
 							.OnSelectionChanged(this, &SHTNDomain::HandleTaskSelectionChanged)
-//							.OnAddNewClicked()
+							.OnAddNewClicked(this, &SHTNDomain::HandleNewCompositeTask)
 							.ListItemsSource(&CachedCompositeTasks)
 							.ListCaption(LOCTEXT("CompTaskListCaption", "Composite Tasks"))
 							.AddNewCaption(LOCTEXT("NewCompTaskBtnCaption", "New Composite Task"))
@@ -87,18 +87,25 @@ void SHTNDomain::Update()
 	CachedPrimitiveTasks.Empty();
 	CachedCompositeTasks.Empty();
 
-	for (const auto& Task : HTNAsset->PrimitiveTasks)
+	for (const auto& Task : HTNAsset->GetPrimitiveTasks())
 	{
 		CachedPrimitiveTasks.Add(MakeShareable(new FHTNTaskViewModel(Task.Key, Task.Value)));
 	}
 
-	for (const auto& Task : HTNAsset->CompositeTasks)
+	for (const auto& Task : HTNAsset->GetCompositeTasks())
 	{
 		CachedCompositeTasks.Add(MakeShareable(new FHTNTaskViewModel(Task.Key, Task.Value)));
 	}
 
 	ListPrimitiveTasks->Update();
 	ListCompositeTasks->Update();
+
+	if (PendingRenameTaskId > 0)
+	{
+		ListPrimitiveTasks->RequestRename(PendingRenameTaskId);
+		ListPrimitiveTasks->RequestRename(PendingRenameTaskId);
+		PendingRenameTaskId = INDEX_NONE;
+	}
 }
 
 TSharedRef<ITableRow> SHTNDomain::CreateTaskWidget(TSharedPtr<FHTNTaskViewModel> InItem, const TSharedRef<STableViewBase>& OwnerTable)
@@ -106,9 +113,37 @@ TSharedRef<ITableRow> SHTNDomain::CreateTaskWidget(TSharedPtr<FHTNTaskViewModel>
 	return
 		SNew(STableRow<TSharedPtr<FHTNTaskViewModel>>, OwnerTable)
 		[
-			SNew(STextBlock)
-			.Text(InItem->DisplayName)
+			SNew(SHTNTaskListItem)
+			.TaskName(InItem->DisplayName)
+			.TaskId(InItem->Id)
+			.OnRenamed(this, &SHTNDomain::RenameTask)
 		];
+}
+
+void SHTNDomain::RenameTask(int32 TaskId, const FText& NewName)
+{
+	if (HTNEditor.IsValid())
+	{
+		HTNEditor.Pin()->RenameTask(TaskId, NewName);
+	}
+}
+
+FReply SHTNDomain::HandleNewPrimitiveTask()
+{
+	if (HTNEditor.IsValid())
+	{
+		PendingRenameTaskId = HTNEditor.Pin()->NewPrimitiveTask();
+	}
+	return FReply::Handled();
+}
+
+FReply SHTNDomain::HandleNewCompositeTask()
+{
+	if (HTNEditor.IsValid())
+	{
+		PendingRenameTaskId = HTNEditor.Pin()->NewCompositeTask();
+	}
+	return FReply::Handled();
 }
 
 void SHTNDomain::HandleTaskSelectionChanged(TSharedPtr<FHTNTaskViewModel> SelectedItem, ESelectInfo::Type SelectInfo)
@@ -127,7 +162,7 @@ void SHTNDomain::HandleTaskSelectionChanged(TSharedPtr<FHTNTaskViewModel> Select
 
 		if (HTNEditor.IsValid())
 		{
-			HTNEditor.Pin()->SelectTask(SelectedItem->Name);
+			HTNEditor.Pin()->SelectTask(SelectedItem->Id);
 		}
 	}
 }

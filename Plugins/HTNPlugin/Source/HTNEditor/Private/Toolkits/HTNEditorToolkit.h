@@ -88,10 +88,22 @@ public:
 
 	// Returns the task which is currently selected (nullptr if none selected)
 	// The pointer is volatile, do not store it
-	FHTNBuilder_PrimitiveTask* GetSelectedPrimitiveTask() const;
-	FHTNBuilder_CompositeTask* GetSelectedCompositeTask() const;
+	const FHTNBuilder_PrimitiveTask* GetSelectedPrimitiveTask() const;
+	const FHTNBuilder_CompositeTask* GetSelectedCompositeTask() const;
 
-	void SelectTask(FName Name);
+	void SelectTask(int32 Id);
+
+	// returns TaskId
+	int32 NewPrimitiveTask();
+	int32 NewCompositeTask();
+
+	void AddNewMethodToSelectedCompositeTask();
+
+	void RenameTask(int32 TaskId, const FText& NewName);
+
+private:
+	template<typename Task>
+	int32 NewTask_internal(TMap<int32, Task>& TaskMap, const FText& TaskNameFormat);
 
 private:
 
@@ -102,5 +114,8 @@ private:
 	TSharedRef<ISlateStyle> Style;
 
 	/** Selected task (can be primitive or Composite) */
-	FName SelectedTask;
+	int32 SelectedTaskId;
+
+	/** Maximal task id in use */
+	int32 MaxTaskId;
 };
